@@ -1,0 +1,51 @@
+project_name: kbgen
+version: 2
+
+before:
+  hooks:
+    - go mod download
+
+env:
+  - COSIGN_YES=true
+
+builds:
+  - id: kbgen
+    binary: kbgen
+    main: ./cmd/kbgen
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .Commit }} -X main.date={{ .CommitDate }} -X main.treeState={{ .IsGitDirty }} -X main.builtBy=goreleaser
+      - -extldflags "-static"
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+archives:
+- files:
+    - LICENSE
+  wrap_in_directory: true
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+
+release:
+  draft: false
+  prerelease: "false"
+  name_template: "Release {{ .Tag }}"

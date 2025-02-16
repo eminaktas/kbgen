@@ -1,0 +1,25 @@
+# deepCopyIntoNominee:
+# List of schema names for which a DeepCopyInto function should be generated.
+# Kubebuilder requires a DeepCopyInto function in certain packages.
+deepCopyIntoNominee:
+  - Server
+
+# customAnyType:
+# Optional configuration for handling KCL's multiple types.
+# Uncomment and adjust if you need to override the default type (*apiextensionsv1.JSON)
+# and specify the package import.
+#
+# customAnyType:
+#   type: '*apiextensionsv1.JSON'
+#   import: 'apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"'
+
+# mapTypeSchemas:
+# Configuration for schemas that need to be generated as map types.
+# This is a workaround for handling index schemas (see: https://github.com/kcl-lang/kcl-go/issues/411).
+mapTypeSchemas:
+  - name: EnvMap
+    pkgPath: "konfig.models.frontend.container.env"
+    item:
+      schemaName: Env
+      # Optional: Documentation for the schema.
+      schemaDoc: "Env represents an environment variable present in a Container."

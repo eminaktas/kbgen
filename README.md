@@ -20,7 +20,7 @@ curl -sSL https://raw.githubusercontent.com/eminaktas/kbgen/$KBGEN_VERSION/insta
 If you have a Go environment set up, you can install **kbgen** with:
 
 ```bash
-go install github.com/eminaktas/kbgen@latest
+go install github.com/eminaktas/kbgen/cmd/kbgen@latest
 ```
 
 This will compile and install kbgen into your `$GOPATH/bin`.
@@ -32,7 +32,7 @@ Clone the repository and build the binary:
 ```bash
 git clone https://github.com/eminaktas/kbgen.git
 cd kbgen
-go build -o kbgen .
+go build -o kbgen ./cmd/kbgen
 ```
 
 Then, move the binary to your `$PATH`:

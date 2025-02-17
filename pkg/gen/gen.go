@@ -174,6 +174,7 @@ func (gr *Generator) generateGoStructs(
 		var structDefBuilder strings.Builder
 
 		var fields map[string]*api.KclType
+		var baseSchema *api.KclType
 
 		// Skip if already processed.
 		if processed[name] {
@@ -202,6 +203,16 @@ func (gr *Generator) generateGoStructs(
 			} else {
 				return nil, fmt.Errorf("possible index signature used in %s. "+
 					"Please refer to the documentation for the workaround", name)
+			}
+		}
+
+		// If current schema comes with BaseSchema, remove the existing fields
+		// in the struct and include BaseSchema with inline tag.
+		if baseSchema = schema.BaseSchema; baseSchema != nil {
+			if baseSchema.Properties != nil {
+				for bName := range baseSchema.Properties {
+					delete(fields, bName)
+				}
 			}
 		}
 
@@ -288,6 +299,11 @@ func (gr *Generator) generateGoStructs(
 			// Append the field definition (capitalize to export the field).
 			structDefBuilder.WriteString(fmt.Sprintf("\t%s %s `json:\"%s%s\" yaml:\"%s%s\"`\n",
 				capitalize(fieldName), goType, fieldName, omitEmpty, fieldName, omitEmpty))
+		}
+
+		// Handle BaseSchema
+		if baseSchema != nil {
+			structDefBuilder.WriteString(fmt.Sprintf("\n\t%s `json:\",inline\" yaml:\",inline\"`\n", baseSchema.SchemaName))
 		}
 
 		structDefBuilder.WriteString("}\n")

@@ -6,52 +6,60 @@ import (
 
 type Volume struct {
 	// +kubebuilder:validation:Optional
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
-	// +kubebuilder:validation:Optional
 	Mounts []*Mount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +kubebuilder:validation:Optional
 	VolumeSource *apiextensionsv1.JSON `json:"volumeSource,omitempty" yaml:"volumeSource,omitempty"`
+	// +kubebuilder:validation:Optional
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
 type Mount struct {
 	// +kubebuilder:validation:Optional
-	SubPath string `json:"subPath,omitempty" yaml:"subPath,omitempty"`
-	// +kubebuilder:validation:Optional
-	Container string `json:"container,omitempty" yaml:"container,omitempty"`
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 	// +kubebuilder:validation:Optional
 	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
 	// +kubebuilder:validation:Optional
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+	Container string `json:"container,omitempty" yaml:"container,omitempty"`
+	// +kubebuilder:validation:Optional
+	SubPath string `json:"subPath,omitempty" yaml:"subPath,omitempty"`
+}
+
+type EmptyDir struct {
+	// +kubebuilder:validation:Optional
+	SizeLimit string `json:"sizeLimit,omitempty" yaml:"sizeLimit,omitempty"`
+	// +kubebuilder:validation:Enum=;Memory
+	// +kubebuilder:validation:Required
+	Medium string `json:"medium" yaml:"medium"`
 }
 
 type Secret struct {
 	// +kubebuilder:validation:Required
 	SecretName string `json:"secretName" yaml:"secretName"`
 	// +kubebuilder:validation:Optional
-	Items []map[string]string `json:"items,omitempty" yaml:"items,omitempty"`
-	// +kubebuilder:validation:Optional
 	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
+	// +kubebuilder:validation:Optional
+	Items []map[string]string `json:"items,omitempty" yaml:"items,omitempty"`
 }
 
 type ConfigMap struct {
-	// +kubebuilder:validation:Required
-	Name string `json:"name" yaml:"name"`
-	// +kubebuilder:validation:Optional
-	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
 	// +kubebuilder:validation:Optional
 	Items []map[string]string `json:"items,omitempty" yaml:"items,omitempty"`
+	// +kubebuilder:validation:Optional
+	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
+	// +kubebuilder:validation:Required
+	Name string `json:"name" yaml:"name"`
 }
 
 type FlexVolume struct {
+	// +kubebuilder:validation:Optional
+	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
+	// +kubebuilder:validation:Optional
+	FsType string `json:"fsType,omitempty" yaml:"fsType,omitempty"`
 	// +kubebuilder:validation:Required
 	Driver string `json:"driver" yaml:"driver"`
 	// +kubebuilder:validation:Optional
-	FsType string `json:"fsType,omitempty" yaml:"fsType,omitempty"`
-	// +kubebuilder:validation:Optional
 	Options map[string]string `json:"options,omitempty" yaml:"options,omitempty"`
-	// +kubebuilder:validation:Optional
-	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
 }
 
 type HostPath struct {
@@ -70,19 +78,11 @@ type DownwardAPI struct {
 
 type CSI struct {
 	// +kubebuilder:validation:Optional
-	VolumeAttributes map[string]string `json:"volumeAttributes,omitempty" yaml:"volumeAttributes,omitempty"`
+	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
 	// +kubebuilder:validation:Optional
 	FsType string `json:"fsType,omitempty" yaml:"fsType,omitempty"`
 	// +kubebuilder:validation:Required
 	Driver string `json:"driver" yaml:"driver"`
 	// +kubebuilder:validation:Optional
-	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
-}
-
-type EmptyDir struct {
-	// +kubebuilder:validation:Enum=;Memory
-	// +kubebuilder:validation:Required
-	Medium string `json:"medium" yaml:"medium"`
-	// +kubebuilder:validation:Optional
-	SizeLimit string `json:"sizeLimit,omitempty" yaml:"sizeLimit,omitempty"`
+	VolumeAttributes map[string]string `json:"volumeAttributes,omitempty" yaml:"volumeAttributes,omitempty"`
 }

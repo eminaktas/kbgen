@@ -1,5 +1,5 @@
 import konfig.models.kube.frontend.service
-import konfig.models.kube.frontend.container
+import konfig.models.kube.frontend.container as c
 import konfig.models.kube.frontend.volume
 
 schema Server:
@@ -48,8 +48,8 @@ schema Server:
     import models.kube.frontend.container
     import models.kube.templates.resource as res_tpl
 
-    appConfiguration: frontend.Server {
-        mainContainer = container.Main {
+    appConfiguration: models.Server {
+        mainContainer = {
             name = "php-redis"
             env: {
                 "GET_HOSTS_FROM": {value = "dns"}
@@ -72,14 +72,12 @@ schema Server:
     replicas: int = 1
 
     # Main container image
-    image: str
+    image: str = mainContainer.image
     # Main container imagePullPolicy
-    imagePullPolicy?: "Always" | "IfNotPresent" | "Never"
-    # Main container resource
+    imagePullPolicy?: "Always" | "IfNotPresent" | "Never" = mainContainer.imagePullPolicy
 
     # Main container configuration
-    mainContainer: container.Main
-    # Sidecar container configurations
+    mainContainer: Container
 
     # Workload configuration
     labels?: {str:str}
@@ -87,3 +85,9 @@ schema Server:
     volumes?: [volume.Volume]
 
     services?: [service.Service]
+
+schema Container(c.Main):
+    # Container image
+    image?: str
+    # Container imagePullPolicy
+    imagePullPolicy?: "Always" | "IfNotPresent" | "Never"

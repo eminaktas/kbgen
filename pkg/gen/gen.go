@@ -8,8 +8,8 @@ import (
 
 	"slices"
 
-	"github.com/eminaktas/kcl-kb-go-gen/pkg/config"
-	"github.com/eminaktas/kcl-kb-go-gen/pkg/kcl"
+	"github.com/eminaktas/kbgen/pkg/config"
+	"github.com/eminaktas/kbgen/pkg/kcl"
 	"google.golang.org/protobuf/proto"
 	"kcl-lang.io/kcl-go/pkg/tools/gen"
 	"kcl-lang.io/lib/go/api"

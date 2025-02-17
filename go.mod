@@ -3,7 +3,7 @@ module github.com/eminaktas/kcl-kb-go-gen
 go 1.24.0
 
 require (
-	github.com/spf13/cobra v1.9.0
+	github.com/spf13/cobra v1.9.1
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apiextensions-apiserver v0.32.2

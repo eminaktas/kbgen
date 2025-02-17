@@ -50,7 +50,11 @@ type Generator struct {
 
 // NewGeneratorWithPath initializes a new Generator instance using the provided paths.
 func NewGeneratorWithPath(packageName, programPath, directory, outputDir, configPath string) (*Generator, error) {
-	cfg, err := config.LoadConfig(configPath)
+	absConfigPath, err := filepath.Abs(configPath)
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := config.LoadConfig(absConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -63,11 +67,24 @@ func NewGeneratorWithPath(packageName, programPath, directory, outputDir, config
 		cfg.CustomAnyType.Import = defaultImport
 	}
 
+	absProgramPath, err := filepath.Abs(programPath)
+	if err != nil {
+		return nil, err
+	}
+	absDirectory, err := filepath.Abs(directory)
+	if err != nil {
+		return nil, err
+	}
+	absOutputDir, err := filepath.Abs(outputDir)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Generator{
-		kcl:         kcl.NewKCLWithPath(programPath),
+		kcl:         kcl.NewKCLWithPath(absProgramPath),
 		packageName: packageName,
-		directory:   directory,
-		outputDir:   outputDir,
+		directory:   absDirectory,
+		outputDir:   absOutputDir,
 		config:      cfg,
 	}, nil
 }

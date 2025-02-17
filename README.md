@@ -9,6 +9,7 @@
 Install kbgen using our dynamic installer. This script automatically detects the latest version and downloads the correct binary for your operating system and architecture. Make sure you have both curl and jq installed.
 
 Run the following commands in your terminal:
+
 ```bash
 export KBGEN_VERSION=$(curl -s "https://api.github.com/repos/eminaktas/kbgen/tags" | jq -r '.[0].name')
 curl -sSL https://raw.githubusercontent.com/eminaktas/kbgen/$KBGEN_VERSION/install.sh | sh
@@ -99,7 +100,7 @@ Below is an example of how the generated structs can be integrated into a Kubebu
 ```go
 package v1alpha1
 
-import "github.com/eminaktas/kcl-kb-go-gen/example/example-go/pkg/models"
+import "github.com/eminaktas/kbgen/example/example-go/pkg/models"
 
 // KubeConfSpec defines the desired state of KubeConf.
 type KubeConfSpec struct {

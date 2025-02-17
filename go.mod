@@ -1,4 +1,4 @@
-module github.com/eminaktas/kcl-kb-go-gen
+module github.com/eminaktas/kbgen
 
 go 1.24.0
 

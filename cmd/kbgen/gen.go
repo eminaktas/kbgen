@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eminaktas/kcl-kb-go-gen/pkg/gen"
+	"github.com/eminaktas/kbgen/pkg/gen"
 	"github.com/spf13/cobra"
 )
 

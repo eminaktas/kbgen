@@ -33,6 +33,8 @@ var generatorCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "Error generating code: %v\n", err)
 			os.Exit(1)
 		}
+
+		// TODO: Run betteralign to the generated code.
 	},
 }
 

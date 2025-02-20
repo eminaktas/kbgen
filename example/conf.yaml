@@ -1,7 +1,7 @@
-# deepCopyIntoNominee:
+# deepCopyNominee:
 # List of schema names for which a DeepCopyInto function should be generated.
 # Kubebuilder requires a DeepCopyInto function in certain packages.
-deepCopyIntoNominee:
+deepCopyNominee:
   - Server
 
 # customAnyType:

@@ -1,7 +1,9 @@
 package gen
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,7 +24,19 @@ const (
 	defaultAnyType = "*apiextensionsv1.JSON"
 
 	// DeepCopy function template.
-	deepCopyIntoFuncTemplate = "func (in *%s) DeepCopyInto(out *%s) {\n\t*out = *in\n}\n"
+	deepCopyTemplate = `func (in *{{ .TypeName }}) DeepCopyInto(out *{{ .TypeName }}) {
+	*out = *in
+}
+
+func (in *{{ .TypeName }}) DeepCopy() *{{ .TypeName }} {
+	if in == nil {
+		return nil
+	}
+	out := new({{ .TypeName }})
+	in.DeepCopyInto(out)
+	return out
+}
+`
 
 	// KCL basic types.
 	typSchema           = "schema"
@@ -126,7 +140,6 @@ func (gr *Generator) Generate() error {
 		}
 	}
 
-	// TODO: Use https://github.com/dkorunic/betteralign to optimize struct formatting.
 	return nil
 }
 
@@ -209,6 +222,8 @@ func (gr *Generator) generateGoStructs(
 		// If current schema comes with BaseSchema, remove the existing fields
 		// in the struct and include BaseSchema with inline tag.
 		if baseSchema = schema.BaseSchema; baseSchema != nil {
+			schemasQueue = append(schemasQueue, baseSchema.SchemaName)
+			schemaMap[baseSchema.SchemaName] = baseSchema
 			if baseSchema.Properties != nil {
 				for bName := range baseSchema.Properties {
 					delete(fields, bName)
@@ -310,8 +325,12 @@ func (gr *Generator) generateGoStructs(
 		result[filename] = append(result[filename], structDefBuilder.String())
 
 		// Append a DeepCopyInto function if required by the configuration.
-		if slices.Contains(gr.config.DeepCopyIntoNominee, name) {
-			result[filename] = append(result[filename], fmt.Sprintf(deepCopyIntoFuncTemplate, name, name))
+		if slices.Contains(gr.config.DeepCopyNominee, name) {
+			if deepCopyFunc, err := generateDeepCopyFuncs(name); err != nil {
+				return nil, err
+			} else {
+				result[filename] = append(result[filename], deepCopyFunc)
+			}
 		}
 
 	nextSchema:
@@ -320,6 +339,24 @@ func (gr *Generator) generateGoStructs(
 	}
 
 	return result, nil
+}
+
+// generateDeepCopyFuncs to generate the deep copy functions using the template
+func generateDeepCopyFuncs(typeName string) (string, error) {
+	tmpl, err := template.New("deepCopy").Parse(deepCopyTemplate)
+	if err != nil {
+		return "", err
+	}
+
+	var result bytes.Buffer
+	err = tmpl.Execute(&result, map[string]string{
+		"TypeName": typeName,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return result.String(), nil
 }
 
 // hasImport checks whether the given import string is already present.

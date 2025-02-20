@@ -64,7 +64,7 @@ The generator uses a YAML configuration file to fine-tune its behavior. Below is
 
 ```yaml
 # List of schema names for which a DeepCopyInto function should be generated.
-deepCopyIntoNominee:
+deepCopyNominee:
   - Server
 
 # Optional configuration for handling multiple types in KCL.

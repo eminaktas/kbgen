@@ -25,17 +25,17 @@ type Exec struct {
 	Command []string `json:"command" yaml:"command"`
 }
 
-type Tcp struct {
-	// +kubebuilder:validation:Required
-	TcpSocket *int `json:"tcpSocket" yaml:"tcpSocket"`
-}
-
 type Http struct {
 	// +kubebuilder:validation:Required
-	Path string `json:"path" yaml:"path"`
-	// +kubebuilder:validation:Required
 	Port *int `json:"port" yaml:"port"`
+	// +kubebuilder:validation:Required
+	Path string `json:"path" yaml:"path"`
 	// +kubebuilder:validation:Enum=HTTP;HTTPS
 	// +kubebuilder:validation:Required
 	Scheme string `json:"scheme" yaml:"scheme"`
+}
+
+type Tcp struct {
+	// +kubebuilder:validation:Required
+	TcpSocket *int `json:"tcpSocket" yaml:"tcpSocket"`
 }

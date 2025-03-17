@@ -8,9 +8,6 @@ import (
 
 // Config holds the configuration settings loaded from a YAML file.
 type Config struct {
-	// DeepCopyNominee specifies schema names for which a DeepCopyInto function should be generated.
-	DeepCopyNominee []string `yaml:"deepCopyNominee,omitempty"`
-
 	// CustomAnyType configures a custom type and its import for handling "any" type.
 	CustomAnyType struct {
 		Type   string `yaml:"type,omitempty"`

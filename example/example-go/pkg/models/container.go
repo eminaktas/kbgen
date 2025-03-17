@@ -5,31 +5,44 @@ import (
 )
 
 type Main struct {
-	// +kubebuilder:validation:Optional
-	WorkingDir string `json:"workingDir,omitempty" yaml:"workingDir,omitempty"`
-	// +kubebuilder:validation:Required
+	// +required
 	Name string `json:"name" yaml:"name"`
-	// +kubebuilder:validation:Optional
-	UseBuiltInEnv *bool `json:"useBuiltInEnv,omitempty" yaml:"useBuiltInEnv,omitempty"`
-	// +kubebuilder:validation:Optional
-	Args []string `json:"args,omitempty" yaml:"args,omitempty"`
-	// +kubebuilder:validation:Optional
-	Ports []*ContainerPort `json:"ports,omitempty" yaml:"ports,omitempty"`
-	// +kubebuilder:validation:Optional
-	Env *EnvMap `json:"env,omitempty" yaml:"env,omitempty"`
-	// +kubebuilder:validation:Optional
-	StartupProbe *Probe `json:"startupProbe,omitempty" yaml:"startupProbe,omitempty"`
-	// +kubebuilder:validation:Optional
-	LivenessProbe *Probe `json:"livenessProbe,omitempty" yaml:"livenessProbe,omitempty"`
-	// +kubebuilder:validation:Optional
-	Command []string `json:"command,omitempty" yaml:"command,omitempty"`
-	// +kubebuilder:validation:Optional
-	EnvFrom []*EnvFromSource `json:"envFrom,omitempty" yaml:"envFrom,omitempty"`
-	// +kubebuilder:validation:Optional
+	// +optional
+	ReadinessProbe *Probe `json:"readinessProbe,omitempty" yaml:"readinessProbe,omitempty"`
+	// +optional
 	Lifecycle *Lifecycle `json:"lifecycle,omitempty" yaml:"lifecycle,omitempty"`
 	// +kubebuilder:pruning:PreserveUnknownFields
-	// +kubebuilder:validation:Optional
+	// +optional
 	SecurityContext map[string]*apiextensionsv1.JSON `json:"securityContext,omitempty" yaml:"securityContext,omitempty"`
-	// +kubebuilder:validation:Optional
-	ReadinessProbe *Probe `json:"readinessProbe,omitempty" yaml:"readinessProbe,omitempty"`
+	// +optional
+	Ports []*ContainerPort `json:"ports,omitempty" yaml:"ports,omitempty"`
+	// +optional
+	Command []string `json:"command,omitempty" yaml:"command,omitempty"`
+	// +optional
+	StartupProbe *Probe `json:"startupProbe,omitempty" yaml:"startupProbe,omitempty"`
+	// +optional
+	Env *EnvMap `json:"env,omitempty" yaml:"env,omitempty"`
+	// +optional
+	WorkingDir string `json:"workingDir,omitempty" yaml:"workingDir,omitempty"`
+	// +optional
+	UseBuiltInEnv *bool `json:"useBuiltInEnv,omitempty" yaml:"useBuiltInEnv,omitempty"`
+	// +optional
+	EnvFrom []*EnvFromSource `json:"envFrom,omitempty" yaml:"envFrom,omitempty"`
+	// +optional
+	LivenessProbe *Probe `json:"livenessProbe,omitempty" yaml:"livenessProbe,omitempty"`
+	// +optional
+	Args []string `json:"args,omitempty" yaml:"args,omitempty"`
+}
+
+func (in *Main) DeepCopyInto(out *Main) {
+	*out = *in
+}
+
+func (in *Main) DeepCopy() *Main {
+	if in == nil {
+		return nil
+	}
+	out := new(Main)
+	in.DeepCopyInto(out)
+	return out
 }

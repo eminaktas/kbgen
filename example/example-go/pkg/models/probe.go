@@ -5,37 +5,89 @@ import (
 )
 
 type Probe struct {
-	// +kubebuilder:validation:Optional
-	PeriodSeconds *int `json:"periodSeconds,omitempty" yaml:"periodSeconds,omitempty"`
-	// +kubebuilder:validation:Optional
-	FailureThreshold *int `json:"failureThreshold,omitempty" yaml:"failureThreshold,omitempty"`
-	// +kubebuilder:validation:Optional
-	SuccessThreshold *int `json:"successThreshold,omitempty" yaml:"successThreshold,omitempty"`
-	// +kubebuilder:pruning:PreserveUnknownFields
-	// +kubebuilder:validation:Required
-	Handler *apiextensionsv1.JSON `json:"handler" yaml:"handler"`
-	// +kubebuilder:validation:Optional
-	InitialDelaySeconds *int `json:"initialDelaySeconds,omitempty" yaml:"initialDelaySeconds,omitempty"`
-	// +kubebuilder:validation:Optional
+	// +optional
 	TimeoutSeconds *int `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +required
+	Handler *apiextensionsv1.JSON `json:"handler" yaml:"handler"`
+	// +optional
+	InitialDelaySeconds *int `json:"initialDelaySeconds,omitempty" yaml:"initialDelaySeconds,omitempty"`
+	// +optional
+	FailureThreshold *int `json:"failureThreshold,omitempty" yaml:"failureThreshold,omitempty"`
+	// +optional
+	PeriodSeconds *int `json:"periodSeconds,omitempty" yaml:"periodSeconds,omitempty"`
+	// +optional
+	SuccessThreshold *int `json:"successThreshold,omitempty" yaml:"successThreshold,omitempty"`
+}
+
+func (in *Probe) DeepCopyInto(out *Probe) {
+	*out = *in
+}
+
+func (in *Probe) DeepCopy() *Probe {
+	if in == nil {
+		return nil
+	}
+	out := new(Probe)
+	in.DeepCopyInto(out)
+	return out
 }
 
 type Exec struct {
-	// +kubebuilder:validation:Required
+	// +required
 	Command []string `json:"command" yaml:"command"`
 }
 
-type Http struct {
-	// +kubebuilder:validation:Required
-	Port *int `json:"port" yaml:"port"`
-	// +kubebuilder:validation:Required
-	Path string `json:"path" yaml:"path"`
-	// +kubebuilder:validation:Enum=HTTP;HTTPS
-	// +kubebuilder:validation:Required
-	Scheme string `json:"scheme" yaml:"scheme"`
+func (in *Exec) DeepCopyInto(out *Exec) {
+	*out = *in
+}
+
+func (in *Exec) DeepCopy() *Exec {
+	if in == nil {
+		return nil
+	}
+	out := new(Exec)
+	in.DeepCopyInto(out)
+	return out
 }
 
 type Tcp struct {
-	// +kubebuilder:validation:Required
+	// +required
 	TcpSocket *int `json:"tcpSocket" yaml:"tcpSocket"`
+}
+
+func (in *Tcp) DeepCopyInto(out *Tcp) {
+	*out = *in
+}
+
+func (in *Tcp) DeepCopy() *Tcp {
+	if in == nil {
+		return nil
+	}
+	out := new(Tcp)
+	in.DeepCopyInto(out)
+	return out
+}
+
+type Http struct {
+	// +required
+	Path string `json:"path" yaml:"path"`
+	// +required
+	Port *int `json:"port" yaml:"port"`
+	// +kubebuilder:validation:Enum=HTTP;HTTPS
+	// +required
+	Scheme string `json:"scheme" yaml:"scheme"`
+}
+
+func (in *Http) DeepCopyInto(out *Http) {
+	*out = *in
+}
+
+func (in *Http) DeepCopy() *Http {
+	if in == nil {
+		return nil
+	}
+	out := new(Http)
+	in.DeepCopyInto(out)
+	return out
 }

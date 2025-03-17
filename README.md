@@ -63,10 +63,6 @@ kbgen gen --outputDir=example/example-go/pkg --packageName=models --programPath=
 The generator uses a YAML configuration file to fine-tune its behavior. Below is an example configuration (example/conf.yaml):
 
 ```yaml
-# List of schema names for which a DeepCopyInto function should be generated.
-deepCopyNominee:
-  - Server
-
 # Optional configuration for handling multiple types in KCL.
 # Uncomment and adjust if you need to override the default type (*apiextensionsv1.JSON).
 # customAnyType:

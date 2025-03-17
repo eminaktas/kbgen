@@ -124,11 +124,12 @@ func (gr *Generator) Generate() error {
 		return err
 	}
 
+	// Disabled, not needed anymore
 	// Remove any empty string items.
-	cleanStructs := gr.removeEmptyItems(nestedStructs)
+	// cleanStructs := gr.removeEmptyItems(nestedStructs)
 
 	// Write the generated code to files.
-	for filename, structDefs := range cleanStructs {
+	for filename, structDefs := range nestedStructs {
 		outputPath := filepath.Join(gr.outputDir, gr.packageName, filename+".go")
 		if err := os.MkdirAll(filepath.Dir(outputPath), os.ModePerm); err != nil {
 			return err
@@ -306,9 +307,9 @@ func (gr *Generator) generateGoStructs(
 			omitEmpty := ",omitempty"
 			if slices.Contains(schema.Required, fieldName) {
 				omitEmpty = ""
-				structDefBuilder.WriteString("\t// +kubebuilder:validation:Required\n")
+				structDefBuilder.WriteString("\t// +required\n")
 			} else {
-				structDefBuilder.WriteString("\t// +kubebuilder:validation:Optional\n")
+				structDefBuilder.WriteString("\t// +optional\n")
 			}
 
 			// Append the field definition (capitalize to export the field).
@@ -324,8 +325,8 @@ func (gr *Generator) generateGoStructs(
 		structDefBuilder.WriteString("}\n")
 		result[filename] = append(result[filename], structDefBuilder.String())
 
-		// Append a DeepCopyInto function if required by the configuration.
-		if slices.Contains(gr.config.DeepCopyNominee, name) {
+		if isSchema, _ := isTypeSchema(schema); isSchema {
+			// Append a DeepCopyInto function if go type is struct
 			if deepCopyFunc, err := generateDeepCopyFuncs(name); err != nil {
 				return nil, err
 			} else {
@@ -369,17 +370,17 @@ func (gr *Generator) hasImport(codeSnippets []string, importStr string) bool {
 }
 
 // removeEmptyItems cleans up empty string items from the generated code map.
-func (gr *Generator) removeEmptyItems(nestedStructs map[string][]string) map[string][]string {
-	cleaned := make(map[string][]string)
-	for key, items := range nestedStructs {
-		for _, item := range items {
-			if item != "" {
-				cleaned[key] = append(cleaned[key], item)
-			}
-		}
-	}
-	return cleaned
-}
+// func (gr *Generator) removeEmptyItems(nestedStructs map[string][]string) map[string][]string {
+// 	cleaned := make(map[string][]string)
+// 	for key, items := range nestedStructs {
+// 		for _, item := range items {
+// 			if item != "" {
+// 				cleaned[key] = append(cleaned[key], item)
+// 			}
+// 		}
+// 	}
+// 	return cleaned
+// }
 
 // kclTypeToGoType converts a KCL type to its corresponding Go type.
 func (gr *Generator) kclTypeToGoType(kType *api.KclType) (string, error) {

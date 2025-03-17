@@ -1,9 +1,3 @@
-# deepCopyNominee:
-# List of schema names for which a DeepCopyInto function should be generated.
-# Kubebuilder requires a DeepCopyInto function in certain packages.
-deepCopyNominee:
-  - Server
-
 # customAnyType:
 # Optional configuration for handling KCL's multiple types.
 # Uncomment and adjust if you need to override the default type (*apiextensionsv1.JSON)

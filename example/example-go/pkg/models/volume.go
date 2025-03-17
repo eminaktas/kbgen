@@ -5,84 +5,201 @@ import (
 )
 
 type Volume struct {
-	// +kubebuilder:pruning:PreserveUnknownFields
-	// +kubebuilder:validation:Optional
-	VolumeSource *apiextensionsv1.JSON `json:"volumeSource,omitempty" yaml:"volumeSource,omitempty"`
-	// +kubebuilder:validation:Optional
+	// +optional
 	Mounts []*Mount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
-	// +kubebuilder:validation:Optional
+	// +optional
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +optional
+	VolumeSource *apiextensionsv1.JSON `json:"volumeSource,omitempty" yaml:"volumeSource,omitempty"`
 }
 
-type ConfigMap struct {
-	// +kubebuilder:validation:Optional
-	Items []map[string]string `json:"items,omitempty" yaml:"items,omitempty"`
-	// +kubebuilder:validation:Optional
-	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
-	// +kubebuilder:validation:Required
-	Name string `json:"name" yaml:"name"`
+func (in *Volume) DeepCopyInto(out *Volume) {
+	*out = *in
 }
 
-type FlexVolume struct {
-	// +kubebuilder:validation:Optional
+func (in *Volume) DeepCopy() *Volume {
+	if in == nil {
+		return nil
+	}
+	out := new(Volume)
+	in.DeepCopyInto(out)
+	return out
+}
+
+type Mount struct {
+	// +optional
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+	// +optional
+	Container string `json:"container,omitempty" yaml:"container,omitempty"`
+	// +optional
+	SubPath string `json:"subPath,omitempty" yaml:"subPath,omitempty"`
+	// +optional
 	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
-	// +kubebuilder:validation:Optional
-	Options map[string]string `json:"options,omitempty" yaml:"options,omitempty"`
-	// +kubebuilder:validation:Optional
-	FsType string `json:"fsType,omitempty" yaml:"fsType,omitempty"`
-	// +kubebuilder:validation:Required
-	Driver string `json:"driver" yaml:"driver"`
 }
 
-type HostPath struct {
-	// +kubebuilder:validation:Required
-	Path string `json:"path" yaml:"path"`
-	// +kubebuilder:validation:Optional
-	Type string `json:"type,omitempty" yaml:"type,omitempty"`
+func (in *Mount) DeepCopyInto(out *Mount) {
+	*out = *in
 }
 
-type DownwardAPI struct {
-	// +kubebuilder:validation:Optional
-	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
-	// +kubebuilder:validation:Optional
-	Items []map[string]*apiextensionsv1.JSON `json:"items,omitempty" yaml:"items,omitempty"`
-}
-
-type CSI struct {
-	// +kubebuilder:validation:Optional
-	FsType string `json:"fsType,omitempty" yaml:"fsType,omitempty"`
-	// +kubebuilder:validation:Optional
-	VolumeAttributes map[string]string `json:"volumeAttributes,omitempty" yaml:"volumeAttributes,omitempty"`
-	// +kubebuilder:validation:Optional
-	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
-	// +kubebuilder:validation:Required
-	Driver string `json:"driver" yaml:"driver"`
+func (in *Mount) DeepCopy() *Mount {
+	if in == nil {
+		return nil
+	}
+	out := new(Mount)
+	in.DeepCopyInto(out)
+	return out
 }
 
 type EmptyDir struct {
 	// +kubebuilder:validation:Enum=;Memory
-	// +kubebuilder:validation:Required
+	// +required
 	Medium string `json:"medium" yaml:"medium"`
-	// +kubebuilder:validation:Optional
+	// +optional
 	SizeLimit string `json:"sizeLimit,omitempty" yaml:"sizeLimit,omitempty"`
 }
 
-type Secret struct {
-	// +kubebuilder:validation:Required
-	SecretName string `json:"secretName" yaml:"secretName"`
-	// +kubebuilder:validation:Optional
-	Items []map[string]string `json:"items,omitempty" yaml:"items,omitempty"`
-	// +kubebuilder:validation:Optional
-	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
+func (in *EmptyDir) DeepCopyInto(out *EmptyDir) {
+	*out = *in
 }
 
-type Mount struct {
-	// +kubebuilder:validation:Optional
-	SubPath string `json:"subPath,omitempty" yaml:"subPath,omitempty"`
-	// +kubebuilder:validation:Optional
-	Container string `json:"container,omitempty" yaml:"container,omitempty"`
-	// +kubebuilder:validation:Optional
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
-	// +kubebuilder:validation:Optional
+func (in *EmptyDir) DeepCopy() *EmptyDir {
+	if in == nil {
+		return nil
+	}
+	out := new(EmptyDir)
+	in.DeepCopyInto(out)
+	return out
+}
+
+type Secret struct {
+	// +required
+	SecretName string `json:"secretName" yaml:"secretName"`
+	// +optional
+	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
+	// +optional
+	Items []map[string]string `json:"items,omitempty" yaml:"items,omitempty"`
+}
+
+func (in *Secret) DeepCopyInto(out *Secret) {
+	*out = *in
+}
+
+func (in *Secret) DeepCopy() *Secret {
+	if in == nil {
+		return nil
+	}
+	out := new(Secret)
+	in.DeepCopyInto(out)
+	return out
+}
+
+type ConfigMap struct {
+	// +optional
+	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
+	// +optional
+	Items []map[string]string `json:"items,omitempty" yaml:"items,omitempty"`
+	// +required
+	Name string `json:"name" yaml:"name"`
+}
+
+func (in *ConfigMap) DeepCopyInto(out *ConfigMap) {
+	*out = *in
+}
+
+func (in *ConfigMap) DeepCopy() *ConfigMap {
+	if in == nil {
+		return nil
+	}
+	out := new(ConfigMap)
+	in.DeepCopyInto(out)
+	return out
+}
+
+type FlexVolume struct {
+	// +optional
 	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
+	// +optional
+	Options map[string]string `json:"options,omitempty" yaml:"options,omitempty"`
+	// +required
+	Driver string `json:"driver" yaml:"driver"`
+	// +optional
+	FsType string `json:"fsType,omitempty" yaml:"fsType,omitempty"`
+}
+
+func (in *FlexVolume) DeepCopyInto(out *FlexVolume) {
+	*out = *in
+}
+
+func (in *FlexVolume) DeepCopy() *FlexVolume {
+	if in == nil {
+		return nil
+	}
+	out := new(FlexVolume)
+	in.DeepCopyInto(out)
+	return out
+}
+
+type HostPath struct {
+	// +required
+	Path string `json:"path" yaml:"path"`
+	// +optional
+	Type string `json:"type,omitempty" yaml:"type,omitempty"`
+}
+
+func (in *HostPath) DeepCopyInto(out *HostPath) {
+	*out = *in
+}
+
+func (in *HostPath) DeepCopy() *HostPath {
+	if in == nil {
+		return nil
+	}
+	out := new(HostPath)
+	in.DeepCopyInto(out)
+	return out
+}
+
+type DownwardAPI struct {
+	// +optional
+	DefaultMode *int `json:"defaultMode,omitempty" yaml:"defaultMode,omitempty"`
+	// +optional
+	Items []map[string]*apiextensionsv1.JSON `json:"items,omitempty" yaml:"items,omitempty"`
+}
+
+func (in *DownwardAPI) DeepCopyInto(out *DownwardAPI) {
+	*out = *in
+}
+
+func (in *DownwardAPI) DeepCopy() *DownwardAPI {
+	if in == nil {
+		return nil
+	}
+	out := new(DownwardAPI)
+	in.DeepCopyInto(out)
+	return out
+}
+
+type CSI struct {
+	// +optional
+	FsType string `json:"fsType,omitempty" yaml:"fsType,omitempty"`
+	// +required
+	Driver string `json:"driver" yaml:"driver"`
+	// +optional
+	VolumeAttributes map[string]string `json:"volumeAttributes,omitempty" yaml:"volumeAttributes,omitempty"`
+	// +optional
+	ReadOnly *bool `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
+}
+
+func (in *CSI) DeepCopyInto(out *CSI) {
+	*out = *in
+}
+
+func (in *CSI) DeepCopy() *CSI {
+	if in == nil {
+		return nil
+	}
+	out := new(CSI)
+	in.DeepCopyInto(out)
+	return out
 }

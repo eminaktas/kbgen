@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"slices"
@@ -124,10 +125,6 @@ func (gr *Generator) Generate() error {
 		return err
 	}
 
-	// Disabled, not needed anymore
-	// Remove any empty string items.
-	// cleanStructs := gr.removeEmptyItems(nestedStructs)
-
 	// Write the generated code to files.
 	for filename, structDefs := range nestedStructs {
 		outputPath := filepath.Join(gr.outputDir, gr.packageName, filename+".go")
@@ -165,93 +162,107 @@ func (gr *Generator) generateGoStructs(
 	processed map[string]bool,
 ) (map[string][]string, error) {
 	result := make(map[string][]string)
-	// Use a queue to process schemas recursively.
-	schemasQueue := []string{}
+
+	// Use a queue to process schemas recursively, ensuring a deterministic order
+	schemasQueue := make([]string, 0, len(schemaMap))
 	for name := range schemaMap {
 		schemasQueue = append(schemasQueue, name)
 	}
+	sort.Strings(schemasQueue) // Ensure consistent processing order
+
+	structData := make(map[string][]string) // Temporary storage for struct definitions
+	imports := make(map[string]string)      // Track imports separately
 
 	for len(schemasQueue) > 0 {
-		// Dequeue the first element.
+		// Always process in sorted order
+		sort.Strings(schemasQueue)
 		name := schemasQueue[0]
 		schemasQueue = schemasQueue[1:]
 		schema := schemaMap[name]
 
-		// Determine the file name from the schema's filename.
-		baseFileName := schema.GetFilename()
-		if baseFileName == "" {
-			baseFileName = schema.Item.GetFilename()
-		}
-		filename := strings.TrimSuffix(filepath.Base(baseFileName), filepath.Ext(baseFileName))
-
-		// Use a string builder to construct the struct definition.
-		var structDefBuilder strings.Builder
-
-		var fields map[string]*api.KclType
-		var baseSchema *api.KclType
-
-		// Skip if already processed.
+		// Skip if already processed
 		if processed[name] {
 			continue
 		}
 		processed[name] = true
 
+		baseFileName := schema.GetFilename()
+		if baseFileName == "" && schema.Item != nil {
+			baseFileName = schema.Item.GetFilename()
+		}
+		filename := strings.TrimSuffix(filepath.Base(baseFileName), filepath.Ext(baseFileName))
+
 		// Check if this schema should be generated as a map type.
+		isMapType := false
+		var mapTypeDef string
 		for _, mapSchema := range gr.config.MapTypeSchemas {
 			if mapSchema.Name == name {
-				mapTypeDef := fmt.Sprintf("type %s map[string]*%s\n", name, mapSchema.Item.SchemaName)
-				result[filename] = append(result[filename], mapTypeDef)
-				// Skip further processing for this schema.
-				goto nextSchema
+				mapTypeDef = fmt.Sprintf("type %s map[string]*%s\n", name, mapSchema.Item.SchemaName)
+				isMapType = true
+				break
 			}
 		}
-
-		// Begin struct definition.
-		structDefBuilder.WriteString(fmt.Sprintf("type %s struct {\n", name))
-
-		// Retrieve properties for the schema.
-		fields = schema.Properties
-		if fields == nil {
-			if schema.Item != nil {
-				fields = schema.Item.Properties
-			} else {
-				return nil, fmt.Errorf("possible index signature used in %s. "+
-					"Please refer to the documentation for the workaround", name)
-			}
+		if isMapType {
+			structData[filename] = append(structData[filename], mapTypeDef)
+			continue // Skip further processing for this schema
 		}
 
-		// If current schema comes with BaseSchema, remove the existing fields
-		// in the struct and include BaseSchema with inline tag.
-		if baseSchema = schema.BaseSchema; baseSchema != nil {
-			schemasQueue = append(schemasQueue, baseSchema.SchemaName)
-			schemaMap[baseSchema.SchemaName] = baseSchema
+		// Retrieve schema properties
+		var fields map[string]*api.KclType
+		if schema.Properties != nil {
+			fields = schema.Properties
+		} else if schema.Item != nil && schema.Item.Properties != nil {
+			fields = schema.Item.Properties
+		} else {
+			return nil, fmt.Errorf("possible index signature used in %s. "+
+				"Please refer to the documentation for the workaround", name)
+		}
+
+		// Handle BaseSchema
+		baseSchema := schema.BaseSchema
+		if baseSchema != nil {
+			if _, exists := schemaMap[baseSchema.SchemaName]; !exists {
+				schemaMap[baseSchema.SchemaName] = baseSchema
+				schemasQueue = append(schemasQueue, baseSchema.SchemaName)
+			}
+			// Remove baseSchema properties from the struct
 			if baseSchema.Properties != nil {
-				for bName := range baseSchema.Properties {
-					delete(fields, bName)
+				for baseField := range baseSchema.Properties {
+					delete(fields, baseField)
 				}
 			}
 		}
 
-		// Process each field in the schema.
-		for fieldName, fieldType := range fields {
-			// Skip non-exported fields.
-			if strings.HasPrefix(fieldName, "_") {
-				continue
+		// Collect field names and sort them for deterministic order
+		fieldNames := make([]string, 0, len(fields))
+		for fieldName := range fields {
+			if !strings.HasPrefix(fieldName, "_") { // Ignore non-exported fields
+				fieldNames = append(fieldNames, fieldName)
 			}
+		}
+		sort.Strings(fieldNames) // Ensure consistent order
 
-			// Check if the field's type is a schema type and queue nested schemas if needed.
+		// Build struct definition
+		var structDefBuilder strings.Builder
+		structDefBuilder.WriteString(fmt.Sprintf("type %s struct {\n", name))
+
+		for _, fieldName := range fieldNames {
+			fieldType := fields[fieldName]
+
+			// Process nested schemas
 			if isSchema, nestedTypes := isTypeSchema(fieldType); isSchema {
 				// Determine whether this is an index signature case.
 				possibleIndexSignature := true
 				if nestedTypes == nil {
 					if fieldType.Item != nil {
-						if _, ok := schemaMap[fieldType.Item.SchemaName]; !ok {
-							schemasQueue = append(schemasQueue, fieldType.Item.SchemaName)
+						if _, exists := schemaMap[fieldType.Item.SchemaName]; !exists {
 							schemaMap[fieldType.Item.SchemaName] = proto.Clone(fieldType).(*api.KclType)
+							schemasQueue = append(schemasQueue, fieldType.Item.SchemaName)
 							possibleIndexSignature = false
 						}
 					} else {
-						if _, ok := schemaMap[fieldType.SchemaName]; !ok {
+						if _, exists := schemaMap[fieldType.SchemaName]; !exists {
+							schemaMap[fieldType.SchemaName] = proto.Clone(fieldType).(*api.KclType)
 							schemasQueue = append(schemasQueue, fieldType.SchemaName)
 							if fieldType.Item != nil || fieldType.Properties != nil {
 								schemaMap[fieldType.SchemaName] = proto.Clone(fieldType).(*api.KclType)
@@ -261,10 +272,10 @@ func (gr *Generator) generateGoStructs(
 					}
 				} else {
 					for nestedName, nestedSchema := range nestedTypes {
-						if _, ok := schemaMap[nestedName]; !ok {
-							schemasQueue = append(schemasQueue, nestedName)
+						if _, exists := schemaMap[nestedName]; !exists {
 							schemaMap[nestedName] = nestedSchema
 							possibleIndexSignature = false
+							schemasQueue = append(schemasQueue, nestedName)
 						}
 					}
 				}
@@ -285,22 +296,19 @@ func (gr *Generator) generateGoStructs(
 				}
 			}
 
-			// Convert KCL type to Go type.
 			goType, err := gr.kclTypeToGoType(fieldType)
 			if err != nil {
 				return nil, err
 			}
 
-			// If the type uses a custom "any" type, ensure the necessary import is added.
+			// Ensure necessary imports are included (store in separate map)
 			if strings.Contains(goType, gr.config.CustomAnyType.Type) {
-				if !gr.hasImport(result[filename], gr.config.CustomAnyType.Import) {
-					// Prepend the import statement.
-					result[filename] = append([]string{fmt.Sprintf(
-						importTemplate, gr.config.CustomAnyType.Import)}, result[filename]...)
+				if _, exists := imports[filename]; !exists {
+					imports[filename] = fmt.Sprintf(importTemplate, gr.config.CustomAnyType.Import)
 				}
 			}
 
-			// Add field comment (if any) and kubebuilder validation markers.
+			// Append field comment and kubebuilder validation markers
 			if fieldComment := getFieldComment(fieldType); fieldComment != "" {
 				structDefBuilder.WriteString(fmt.Sprintf("\t%s\n", fieldComment))
 			}
@@ -312,31 +320,39 @@ func (gr *Generator) generateGoStructs(
 				structDefBuilder.WriteString("\t// +optional\n")
 			}
 
-			// Append the field definition (capitalize to export the field).
+			// Append the field definition
 			structDefBuilder.WriteString(fmt.Sprintf("\t%s %s `json:\"%s%s\" yaml:\"%s%s\"`\n",
 				capitalize(fieldName), goType, fieldName, omitEmpty, fieldName, omitEmpty))
 		}
 
-		// Handle BaseSchema
+		// Handle BaseSchema inclusion
 		if baseSchema != nil {
 			structDefBuilder.WriteString(fmt.Sprintf("\n\t%s `json:\",inline\" yaml:\",inline\"`\n", baseSchema.SchemaName))
 		}
 
 		structDefBuilder.WriteString("}\n")
-		result[filename] = append(result[filename], structDefBuilder.String())
+		structData[filename] = append(structData[filename], structDefBuilder.String())
 
+		// Append DeepCopy function if needed
 		if isSchema, _ := isTypeSchema(schema); isSchema {
-			// Append a DeepCopyInto function if go type is struct
-			if deepCopyFunc, err := generateDeepCopyFuncs(name); err != nil {
-				return nil, err
+			if deepCopyFunc, err := generateDeepCopyFuncs(name); err == nil {
+				structData[filename] = append(structData[filename], deepCopyFunc)
 			} else {
-				result[filename] = append(result[filename], deepCopyFunc)
+				return nil, err
 			}
 		}
+	}
 
-	nextSchema:
-		// Label used to skip additional processing when a map type is generated.
-		continue
+	// Ensure deterministic ordering of the final result (excluding imports)
+	for filename, structs := range structData {
+		sort.Strings(structs) // Sort generated struct contents
+
+		// Insert import at the top if it exists
+		if importStmt, exists := imports[filename]; exists {
+			result[filename] = append([]string{importStmt}, structs...)
+		} else {
+			result[filename] = structs
+		}
 	}
 
 	return result, nil
@@ -359,28 +375,6 @@ func generateDeepCopyFuncs(typeName string) (string, error) {
 
 	return result.String(), nil
 }
-
-// hasImport checks whether the given import string is already present.
-func (gr *Generator) hasImport(codeSnippets []string, importStr string) bool {
-	if len(codeSnippets) > 0 {
-		expectedImport := fmt.Sprintf(importTemplate, importStr)
-		return codeSnippets[0] == expectedImport
-	}
-	return false
-}
-
-// removeEmptyItems cleans up empty string items from the generated code map.
-// func (gr *Generator) removeEmptyItems(nestedStructs map[string][]string) map[string][]string {
-// 	cleaned := make(map[string][]string)
-// 	for key, items := range nestedStructs {
-// 		for _, item := range items {
-// 			if item != "" {
-// 				cleaned[key] = append(cleaned[key], item)
-// 			}
-// 		}
-// 	}
-// 	return cleaned
-// }
 
 // kclTypeToGoType converts a KCL type to its corresponding Go type.
 func (gr *Generator) kclTypeToGoType(kType *api.KclType) (string, error) {

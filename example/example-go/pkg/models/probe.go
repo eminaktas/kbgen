@@ -4,20 +4,30 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
-type Probe struct {
-	// +optional
-	TimeoutSeconds *int `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
-	// +kubebuilder:pruning:PreserveUnknownFields
-	// +required
-	Handler *apiextensionsv1.JSON `json:"handler" yaml:"handler"`
-	// +optional
-	InitialDelaySeconds *int `json:"initialDelaySeconds,omitempty" yaml:"initialDelaySeconds,omitempty"`
-	// +optional
-	FailureThreshold *int `json:"failureThreshold,omitempty" yaml:"failureThreshold,omitempty"`
-	// +optional
-	PeriodSeconds *int `json:"periodSeconds,omitempty" yaml:"periodSeconds,omitempty"`
-	// +optional
-	SuccessThreshold *int `json:"successThreshold,omitempty" yaml:"successThreshold,omitempty"`
+func (in *Exec) DeepCopyInto(out *Exec) {
+	*out = *in
+}
+
+func (in *Exec) DeepCopy() *Exec {
+	if in == nil {
+		return nil
+	}
+	out := new(Exec)
+	in.DeepCopyInto(out)
+	return out
+}
+
+func (in *Http) DeepCopyInto(out *Http) {
+	*out = *in
+}
+
+func (in *Http) DeepCopy() *Http {
+	if in == nil {
+		return nil
+	}
+	out := new(Http)
+	in.DeepCopyInto(out)
+	return out
 }
 
 func (in *Probe) DeepCopyInto(out *Probe) {
@@ -33,29 +43,6 @@ func (in *Probe) DeepCopy() *Probe {
 	return out
 }
 
-type Exec struct {
-	// +required
-	Command []string `json:"command" yaml:"command"`
-}
-
-func (in *Exec) DeepCopyInto(out *Exec) {
-	*out = *in
-}
-
-func (in *Exec) DeepCopy() *Exec {
-	if in == nil {
-		return nil
-	}
-	out := new(Exec)
-	in.DeepCopyInto(out)
-	return out
-}
-
-type Tcp struct {
-	// +required
-	TcpSocket *int `json:"tcpSocket" yaml:"tcpSocket"`
-}
-
 func (in *Tcp) DeepCopyInto(out *Tcp) {
 	*out = *in
 }
@@ -69,6 +56,11 @@ func (in *Tcp) DeepCopy() *Tcp {
 	return out
 }
 
+type Exec struct {
+	// +required
+	Command []string `json:"command" yaml:"command"`
+}
+
 type Http struct {
 	// +required
 	Path string `json:"path" yaml:"path"`
@@ -79,15 +71,23 @@ type Http struct {
 	Scheme string `json:"scheme" yaml:"scheme"`
 }
 
-func (in *Http) DeepCopyInto(out *Http) {
-	*out = *in
+type Probe struct {
+	// +optional
+	FailureThreshold *int `json:"failureThreshold,omitempty" yaml:"failureThreshold,omitempty"`
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +required
+	Handler *apiextensionsv1.JSON `json:"handler" yaml:"handler"`
+	// +optional
+	InitialDelaySeconds *int `json:"initialDelaySeconds,omitempty" yaml:"initialDelaySeconds,omitempty"`
+	// +optional
+	PeriodSeconds *int `json:"periodSeconds,omitempty" yaml:"periodSeconds,omitempty"`
+	// +optional
+	SuccessThreshold *int `json:"successThreshold,omitempty" yaml:"successThreshold,omitempty"`
+	// +optional
+	TimeoutSeconds *int `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
 }
 
-func (in *Http) DeepCopy() *Http {
-	if in == nil {
-		return nil
-	}
-	out := new(Http)
-	in.DeepCopyInto(out)
-	return out
+type Tcp struct {
+	// +required
+	TcpSocket *int `json:"tcpSocket" yaml:"tcpSocket"`
 }

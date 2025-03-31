@@ -3,7 +3,7 @@ module github.com/eminaktas/kbgen
 go 1.24.0
 require (
 	github.com/spf13/cobra v1.9.1
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apiextensions-apiserver v0.32.3
 	kcl-lang.io/kcl-go v0.11.1

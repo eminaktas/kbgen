@@ -8,7 +8,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apiextensions-apiserver v0.33.0
 	kcl-lang.io/kcl-go v0.11.1
-	kcl-lang.io/lib v0.11.1
+	kcl-lang.io/lib v0.11.2
 	sigs.k8s.io/release-utils v0.11.1
 )
 

@@ -32,7 +32,7 @@ func NewKCLWithPath(path string) *KCL {
 // It returns a list of external packages needed by the KCL program.
 func (k *KCL) updateDependencies() ([]*api.ExternalPkg, error) {
 	// Call the native service client to update dependencies.
-	resp, err := k.Client.UpdateDependencies(&gpyrpc.UpdateDependencies_Args{
+	resp, err := k.Client.UpdateDependencies(&gpyrpc.UpdateDependenciesArgs{
 		ManifestPath: k.programPath,
 	})
 	if err != nil {
@@ -51,8 +51,8 @@ func (k *KCL) GetSchemaTypeMapping(kFiles []string) (map[string]*api.KclType, er
 	}
 
 	// Get the schema type mapping from the service client.
-	result, err := k.Client.GetSchemaTypeMapping(&api.GetSchemaTypeMapping_Args{
-		ExecArgs: &gpyrpc.ExecProgram_Args{
+	result, err := k.Client.GetSchemaTypeMapping(&api.GetSchemaTypeMappingArgs{
+		ExecArgs: &gpyrpc.ExecProgramArgs{
 			KFilenameList: kFiles,
 			WorkDir:       k.programPath,
 			ExternalPkgs:  externalPkgs,

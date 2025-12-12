@@ -21,8 +21,6 @@ import (
 const (
 	// Import-related constants.
 	importTemplate = "import (\n\t%s\n)\n"
-	defaultImport  = "apiextensionsv1 \"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1\""
-	defaultAnyType = "*apiextensionsv1.JSON"
 
 	// DeepCopy function template.
 	deepCopyTemplate = `func (in *{{ .TypeName }}) DeepCopyInto(out *{{ .TypeName }}) {
@@ -65,21 +63,9 @@ type Generator struct {
 
 // NewGeneratorWithPath initializes a new Generator instance using the provided paths.
 func NewGeneratorWithPath(packageName, programPath, directory, outputDir, configPath string) (*Generator, error) {
-	absConfigPath, err := filepath.Abs(configPath)
+	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		return nil, err
-	}
-	cfg, err := config.LoadConfig(absConfigPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set default values for custom type if not provided.
-	if cfg.CustomAnyType.Type == "" {
-		cfg.CustomAnyType.Type = defaultAnyType
-	}
-	if cfg.CustomAnyType.Import == "" {
-		cfg.CustomAnyType.Import = defaultImport
 	}
 
 	absProgramPath, err := filepath.Abs(programPath)
@@ -193,29 +179,36 @@ func (gr *Generator) generateGoStructs(
 		filename := strings.TrimSuffix(filepath.Base(baseFileName), filepath.Ext(baseFileName))
 
 		// Check if this schema should be generated as a map type.
-		isMapType := false
-		var mapTypeDef string
-		for _, mapSchema := range gr.config.MapTypeSchemas {
-			if mapSchema.Name == name {
-				mapTypeDef = fmt.Sprintf("type %s map[string]*%s\n", name, mapSchema.Item.SchemaName)
-				isMapType = true
-				break
+		if indexSignature := schema.GetIndexSignature(); indexSignature != nil {
+			keyGoType, err := gr.kclTypeToGoType(indexSignature.GetKey())
+			if err != nil {
+				return nil, err
 			}
-		}
-		if isMapType {
+			valGoType, err := gr.kclTypeToGoType(indexSignature.Val)
+			if err != nil {
+				return nil, err
+			}
+			var mapTypeDef string
+			if schema.GetSchemaName() == name {
+				mapTypeDef = fmt.Sprintf(
+					"type %s map[%s]%s\n",
+					name,
+					keyGoType,
+					valGoType,
+				)
+			}
 			structData[filename] = append(structData[filename], mapTypeDef)
-			continue // Skip further processing for this schema
+			continue // Skip further processing for this schema type
 		}
 
 		// Retrieve schema properties
 		var fields map[string]*api.KclType
-		if schema.Properties != nil {
-			fields = schema.Properties
-		} else if schema.Item != nil && schema.Item.Properties != nil {
-			fields = schema.Item.Properties
+		if schema.GetProperties() != nil {
+			fields = schema.GetProperties()
+		} else if schema.Item != nil && schema.Item.GetProperties() != nil {
+			fields = schema.Item.GetProperties()
 		} else {
-			return nil, fmt.Errorf("possible index signature used in %s. "+
-				"Please refer to the documentation for the workaround", name)
+			return nil, fmt.Errorf("unknown schema type for %s", name)
 		}
 
 		// Handle BaseSchema

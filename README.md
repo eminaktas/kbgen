@@ -68,26 +68,13 @@ The generator uses a YAML configuration file to fine-tune its behavior. Below is
 # customAnyType:
 #   type: '*apiextensionsv1.JSON'
 #   import: 'apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"'
-
-# mapTypeSchemas:
-# Workaround for index signature schemas.
-# Due to a known issue in kcl-go (see: https://github.com/kcl-lang/kcl-go/issues/411),
-# schemas using index signatures might not be detected correctly.
-# Use this configuration to explicitly define them.
-mapTypeSchemas:
-  - name: EnvMap
-    pkgPath: "konfig.models.frontend.container.env"
-    item:
-      schemaName: Env
-      # Optional: Documentation for the schema.
-      schemaDoc: "Env represents an environment variable present in a Container."
 ```
 
-### Workaround for Index Signature Schemas
+### Workaround for Index Signature Schemas (Removed)
+
+**REMOVED**: This workaround is no longer necessary as the issue has been resolved in the kcl-go library. This note will be removed in the future.
 
 Due to an issue in the underlying kcl-go library (see [Issue #411](https://github.com/kcl-lang/kcl-go/issues/411)), schemas that use index signatures may not be automatically detected.
-Workaround:
-Use the mapTypeSchemas configuration in your YAML file to explicitly define these schemas. For example, if your schema uses an index signature and is named EnvMap, add an entry under mapTypeSchemas as shown in the configuration above.
 
 ### Kubebuilder Example
 
